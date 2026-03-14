@@ -300,6 +300,7 @@ def make_result(card: dict[str, Any], path: Path) -> dict[str, Any]:
         "artifacts": deepcopy(card.get("artifacts") or {}),
         "resume_command": card.get("resume_command"),
         "resume_adapter": card.get("resume_adapter"),
+        "watchdog": deepcopy(card.get("watchdog") or {}),
     }
 
 

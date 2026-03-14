@@ -50,7 +50,8 @@ An adapter should:
 3. resume only safe/idempotent phases
 4. call existing skill logic or scripts
 5. write back updated `status`, `phase`, `artifacts`, and `last_checkpoint_at`
-6. return JSON on stdout when possible
+6. checkpoint often enough that stale detection means something in practice
+7. return JSON on stdout when possible
 
 ## Adapter boundaries
 

@@ -6,11 +6,29 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent
-HEARTBEAT_BLOCK_TEMPLATE = """## Task Runtime Recovery Check\nRun:\n\n```bash\npython3 {workspace}/scripts/task_runtime_watch.py --auto-resume\n```\n\nIf it reports any `resumed` tasks or `needs_attention` tasks, summarize them briefly.\nIf it reports no stale tasks, move on without mentioning it.\n"""
+HEARTBEAT_SECTION_TITLE = "## Task Runtime Recovery Check"
+HEARTBEAT_BLOCK_TEMPLATE = """## Task Runtime Recovery Check
+Run:
+
+```bash
+python3 {workspace}/scripts/task_runtime_watch.py --auto-resume
+```
+
+If it reports any `alerts`, `recoveries`, or `needs_attention`, summarize them briefly.
+Treat them as:
+- `alerts`: a task went silent / stale
+- `recoveries`: watchdog auto-resume moved the task forward
+- `needs_attention`: watchdog could not safely recover it or retries are exhausted
+If it reports no actionable signals, move on without mentioning it.
+"""
+
+
+SECTION_RE = re.compile(r"(?ms)^## Task Runtime Recovery Check\n.*?(?=^##\s|\Z)")
 
 
 def discover_workspace(start: Path) -> Path | None:
@@ -53,13 +71,18 @@ def patch_heartbeat(path: Path, *, workspace: Path) -> bool:
     else:
         current = "# HEARTBEAT.md\n\n"
 
-    if "## Task Runtime Recovery Check" in current:
+    heartbeat_block = HEARTBEAT_BLOCK_TEMPLATE.format(workspace=str(workspace)).rstrip() + "\n"
+    if HEARTBEAT_SECTION_TITLE in current:
+        updated = SECTION_RE.sub(heartbeat_block + "\n", current, count=1)
+    else:
+        updated = current.rstrip() + "\n\n" + heartbeat_block + "\n"
+
+    updated = updated.rstrip() + "\n"
+    if updated == current:
         return False
 
-    heartbeat_block = HEARTBEAT_BLOCK_TEMPLATE.format(workspace=str(workspace))
-    content = current.rstrip() + "\n\n" + heartbeat_block
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(content, encoding="utf-8")
+    path.write_text(updated, encoding="utf-8")
     return True
 
 

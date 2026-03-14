@@ -8,6 +8,7 @@ It provides:
 - checkpoints
 - heartbeat-based stale detection
 - safe auto-resume via adapters
+- watchdog signals that make silent stalls visible (`alerts`, `recoveries`, `needs_attention`)
 
 ## Installation shape
 
@@ -46,10 +47,11 @@ Heartbeat runs the watchdog globally, but a task is only auto-managed when all o
 - `resume_adapter`
 - `resume_command`
 - `artifacts`
+- `watchdog` (internal dedupe state for stale / recovery notifications)
 
 ## Heartbeat wiring
 
-The installer appends this section to `HEARTBEAT.md` if it is not already present:
+The installer appends or refreshes this section in `HEARTBEAT.md`:
 
 ````md
 ## Task Runtime Recovery Check
@@ -59,9 +61,23 @@ Run:
 python3 ~/.openclaw/workspace/scripts/task_runtime_watch.py --auto-resume
 ```
 
-If it reports any `resumed` tasks or `needs_attention` tasks, summarize them briefly.
-If it reports no stale tasks, move on without mentioning it.
+If it reports any `alerts`, `recoveries`, or `needs_attention`, summarize them briefly.
+Treat them as:
+- `alerts`: a task went silent / stale
+- `recoveries`: watchdog auto-resume moved the task forward
+- `needs_attention`: watchdog could not safely recover it or retries are exhausted
+If it reports no actionable signals, move on without mentioning it.
 ````
+
+## Watchdog signal semantics
+
+The watchdog report intentionally separates three user-facing buckets:
+
+- `alerts`: new “this task went silent” signals for the current watchdog pass
+- `recoveries`: successful auto-resume signals for the current watchdog pass
+- `needs_attention`: fresh escalations that now need a human
+
+For manual debugging, the report also includes `active_needs_attention`, which shows current unresolved attention items without spamming the same escalation every heartbeat.
 
 ## Minimal commands
 

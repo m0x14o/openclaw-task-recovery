@@ -22,12 +22,13 @@ If you do not want to read docs, copy **one** of these to your own OpenClaw.
 
 You do **not** need to understand task cards, checkpoints, or adapters before trying it.
 
-It adds four missing pieces for long-running work:
+It adds five missing pieces for long-running work:
 
 - durable task cards (`data/task-runs/*.json`)
 - checkpoints
 - heartbeat-based stale detection
 - safe auto-resume through skill adapters
+- watchdog signals so silent stalls become visible (`alerts`, `recoveries`, `needs_attention`)
 
 This is **not** a business skill. It is a **workspace-level runtime** that any skill can plug into.
 
@@ -74,7 +75,7 @@ The installer will:
 - copy runtime scripts into `<workspace>/scripts/`
 - copy docs into `<workspace>/docs/openclaw-task-runtime/`
 - copy an adapter template into `<workspace>/templates/openclaw-task-runtime/`
-- append an idempotent Task Runtime Recovery Check section to `<workspace>/HEARTBEAT.md`
+- append or refresh an idempotent Task Runtime Recovery Check section in `<workspace>/HEARTBEAT.md`
 
 ## How it works
 
@@ -116,6 +117,16 @@ Do **not** auto-retry irreversible side effects unless you add your own safety g
 - restarts
 - browser confirmation clicks
 - deleting data
+
+## Watchdog signals
+
+The heartbeat watchdog now emits three concise signal buckets:
+
+- `alerts` — the task went silent / stale on this pass
+- `recoveries` — auto-resume moved it forward on this pass
+- `needs_attention` — the watchdog could not safely recover it, or retries are exhausted
+
+This makes the user-facing experience less like “it stopped talking” and more like “it stalled, recovered, or now needs a human.”
 
 ## No skill? Still works
 

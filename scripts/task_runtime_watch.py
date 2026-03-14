@@ -1,13 +1,20 @@
 #!/usr/bin/env python3
-"""Heartbeat helper for inspecting and auto-resuming stale task cards."""
+"""Heartbeat helper for inspecting and auto-resuming stale task cards.
+
+The watchdog emits three high-signal buckets for heartbeat summarization:
+- alerts: a task went silent / stale this round
+- recoveries: auto-resume moved the task forward this round
+- needs_attention: a fresh human-facing escalation this round
+
+`active_needs_attention` is also included for manual inspection without
+repeating the same user-facing escalation every heartbeat.
+"""
 
 from __future__ import annotations
 
 import argparse
 import json
 import subprocess
-import sys
-from pathlib import Path
 from typing import Any
 
 from task_runtime import (
@@ -26,13 +33,123 @@ from task_runtime import (
 )
 
 
+def human_age(seconds: int | None) -> str:
+    if seconds is None:
+        return "unknown"
+    if seconds < 60:
+        return f"{seconds}s"
+    minutes, rem = divmod(seconds, 60)
+    if minutes < 60:
+        return f"{minutes}m" if rem == 0 else f"{minutes}m{rem}s"
+    hours, minutes = divmod(minutes, 60)
+    if hours < 24:
+        return f"{hours}h{minutes:02d}m"
+    days, hours = divmod(hours, 24)
+    return f"{days}d{hours:02d}h"
+
+
+
+def task_ref(card: dict[str, Any]) -> str:
+    return f"{card.get('task_type')}:{card.get('id')}"
+
+
+
 def summarize_problem(card: dict[str, Any]) -> str:
     age = seconds_since_checkpoint(card)
-    age_text = f"{age}s" if age is not None else "unknown"
     return (
-        f"{card.get('task_type')}:{card.get('id')}"
-        f" phase={card.get('phase')} status={card.get('status')} age={age_text}"
+        f"{task_ref(card)}"
+        f" phase={card.get('phase')} status={card.get('status')} age={human_age(age)}"
     )
+
+
+
+def ensure_watchdog(card: dict[str, Any]) -> dict[str, Any]:
+    watchdog = card.get("watchdog")
+    if isinstance(watchdog, dict):
+        return watchdog
+    watchdog = {}
+    card["watchdog"] = watchdog
+    return watchdog
+
+
+
+def notice_fingerprint(card: dict[str, Any], *, kind: str, reason: str = "") -> str:
+    payload = {
+        "kind": kind,
+        "reason": reason,
+        "status": card.get("status"),
+        "phase": card.get("phase"),
+        "last_checkpoint_at": card.get("last_checkpoint_at"),
+        "retry_count": int(card.get("retry_count") or 0),
+        "max_retries": int(card.get("max_retries") or 0),
+        "last_resume_attempt_at": card.get("last_resume_attempt_at"),
+        "last_resume_error": card.get("last_resume_error"),
+    }
+    return json.dumps(payload, ensure_ascii=False, sort_keys=True)
+
+
+
+def record_notice(
+    card: dict[str, Any],
+    *,
+    slot: str,
+    fingerprint: str,
+    event: str,
+    message: str,
+    persist: bool,
+) -> bool:
+    watchdog = ensure_watchdog(card)
+    if watchdog.get(slot) == fingerprint:
+        return False
+    if not persist:
+        return True
+    watchdog[slot] = fingerprint
+    watchdog[f"{slot}_at"] = now_iso()
+    append_history(card, event, phase=card.get("phase"), status=card.get("status"), message=message)
+    save_card(card)
+    return True
+
+
+
+def build_alert(card: dict[str, Any]) -> dict[str, Any]:
+    age = seconds_since_checkpoint(card)
+    return {
+        "task_id": card.get("id"),
+        "task_type": card.get("task_type"),
+        "kind": "silent",
+        "summary": summarize_problem(card),
+        "message": (
+            f"{task_ref(card)} went silent for {human_age(age)} "
+            f"at phase={card.get('phase')}; watchdog is checking recovery."
+        ),
+    }
+
+
+
+def build_attention(card: dict[str, Any], *, reason: str, detail: str = "") -> dict[str, Any]:
+    item: dict[str, Any] = {
+        "task_id": card.get("id"),
+        "task_type": card.get("task_type"),
+        "reason": reason,
+        "summary": summarize_problem(card),
+        "message": f"{task_ref(card)} needs attention: {reason}.",
+    }
+    if detail:
+        item["detail"] = detail
+        item["message"] = f"{item['message']} {detail}"
+    return item
+
+
+
+def build_recovery(before: dict[str, Any], after: dict[str, Any], attempt: dict[str, Any]) -> dict[str, Any]:
+    outcome = f"status={after.get('status')} phase={after.get('phase')}"
+    return {
+        "task_id": after.get("id"),
+        "task_type": after.get("task_type"),
+        "retry_count": attempt.get("retry_count"),
+        "summary": summarize_problem(after),
+        "message": f"{task_ref(before)} auto-resume ran successfully; now {outcome}.",
+    }
 
 
 
@@ -123,6 +240,44 @@ def attempt_resume(card: dict[str, Any], *, timeout_seconds: int, dry_run: bool)
 
 
 
+def maybe_emit_stale_alert(card: dict[str, Any], *, persist: bool) -> dict[str, Any] | None:
+    alert = build_alert(card)
+    should_emit = record_notice(
+        card,
+        slot="last_stale_notice",
+        fingerprint=notice_fingerprint(card, kind="stale"),
+        event="watchdog-stale-alerted",
+        message=alert["message"],
+        persist=persist,
+    )
+    if not should_emit:
+        return None
+    return alert
+
+
+
+def maybe_emit_attention(
+    card: dict[str, Any],
+    *,
+    reason: str,
+    detail: str = "",
+    persist: bool,
+) -> dict[str, Any] | None:
+    item = build_attention(card, reason=reason, detail=detail)
+    should_emit = record_notice(
+        card,
+        slot="last_attention_notice",
+        fingerprint=notice_fingerprint(card, kind="attention", reason=reason),
+        event="watchdog-needs-attention",
+        message=item["message"],
+        persist=persist,
+    )
+    if not should_emit:
+        return None
+    return item
+
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Inspect task cards and optionally auto-resume stale safe tasks")
     parser.add_argument("--task-type")
@@ -143,47 +298,75 @@ def main() -> int:
         "stale_count": len(stale_cards),
         "running": [make_result(card, task_path(str(card.get("id")))) for card in running],
         "stale": [make_result(card, task_path(str(card.get("id")))) for card in stale_cards],
+        "alerts": [],
+        "recoveries": [],
         "resumed": [],
         "skipped": [],
         "needs_attention": [],
+        "active_needs_attention": [],
     }
+
+    persist_notices = not args.dry_run
 
     if args.auto_resume:
         for card in stale_cards:
+            alert = maybe_emit_stale_alert(card, persist=persist_notices)
+            if alert is not None:
+                report["alerts"].append(alert)
+
             max_retries = int(card.get("max_retries") or 0)
             retry_count = int(card.get("retry_count") or 0)
             if retry_count >= max_retries:
-                report["needs_attention"].append(
-                    {
-                        "task_id": card.get("id"),
-                        "reason": "max retries reached",
-                        "summary": summarize_problem(card),
-                    }
-                )
+                active = build_attention(card, reason="max retries reached")
+                report["active_needs_attention"].append(active)
+                notice = maybe_emit_attention(card, reason="max retries reached", persist=persist_notices)
+                if notice is not None:
+                    report["needs_attention"].append(notice)
                 continue
             if not card.get("safe_to_retry"):
-                report["needs_attention"].append(
-                    {
-                        "task_id": card.get("id"),
-                        "reason": "task marked unsafe to auto-retry",
-                        "summary": summarize_problem(card),
-                    }
-                )
+                active = build_attention(card, reason="task marked unsafe to auto-retry")
+                report["active_needs_attention"].append(active)
+                notice = maybe_emit_attention(card, reason="task marked unsafe to auto-retry", persist=persist_notices)
+                if notice is not None:
+                    report["needs_attention"].append(notice)
                 continue
             if not (card.get("resume_command_argv") or card.get("resume_adapter")):
-                report["needs_attention"].append(
-                    {
-                        "task_id": card.get("id"),
-                        "reason": "stale but no resume command or adapter configured",
-                        "summary": summarize_problem(card),
-                    }
-                )
+                active = build_attention(card, reason="stale but no resume command or adapter configured")
+                report["active_needs_attention"].append(active)
+                notice = maybe_emit_attention(card, reason="stale but no resume command or adapter configured", persist=persist_notices)
+                if notice is not None:
+                    report["needs_attention"].append(notice)
                 continue
-            report["resumed"].append(
-                attempt_resume(card, timeout_seconds=args.timeout_seconds, dry_run=args.dry_run)
-            )
+
+            before = dict(card)
+            result = attempt_resume(card, timeout_seconds=args.timeout_seconds, dry_run=args.dry_run)
+            report["resumed"].append(result)
+
+            if result.get("ok"):
+                if result.get("action") != "dry-run":
+                    latest = load_card(str(card.get("id")))
+                    report["recoveries"].append(build_recovery(before, latest, result))
+                continue
+
+            final_retry_count = int(result.get("retry_count") or 0)
+            if final_retry_count >= max_retries:
+                latest = load_card(str(card.get("id")))
+                detail = latest.get("last_resume_error") or result.get("error") or result.get("stderr") or result.get("stdout") or "resume failed"
+                active = build_attention(latest, reason="auto-resume failed and retries are exhausted", detail=detail)
+                report["active_needs_attention"].append(active)
+                notice = maybe_emit_attention(
+                    latest,
+                    reason="auto-resume failed and retries are exhausted",
+                    detail=detail,
+                    persist=persist_notices,
+                )
+                if notice is not None:
+                    report["needs_attention"].append(notice)
     else:
         for card in stale_cards:
+            alert = maybe_emit_stale_alert(card, persist=False)
+            if alert is not None:
+                report["alerts"].append(alert)
             report["skipped"].append(
                 {
                     "task_id": card.get("id"),

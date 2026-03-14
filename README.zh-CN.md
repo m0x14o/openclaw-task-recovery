@@ -28,6 +28,7 @@
 - checkpoint
 - heartbeat 巡检卡死任务
 - 通过 skill adapter 做安全自动续跑
+- watchdog 信号，把“闷声卡住”变成可见的 `alerts / recoveries / needs_attention`
 
 这不是业务 skill，而是一个 **workspace 级 runtime**。任何 skill 都可以接进来。
 
@@ -76,7 +77,7 @@ python3 install.py
 - 复制 runtime 脚本到 `<workspace>/scripts/`
 - 复制文档到 `<workspace>/docs/openclaw-task-runtime/`
 - 复制 adapter 模板到 `<workspace>/templates/openclaw-task-runtime/`
-- 以幂等方式把 Task Runtime Recovery Check 接到 `<workspace>/HEARTBEAT.md`
+- 以幂等方式追加或刷新 `<workspace>/HEARTBEAT.md` 里的 Task Runtime Recovery Check
 
 ## 工作方式
 
@@ -118,6 +119,16 @@ heartbeat -> task_runtime_watch.py -> task_runtime_resume.py -> skill adapter
 - 重启
 - 浏览器确认点击
 - 删除数据
+
+## Watchdog 信号
+
+heartbeat 看门狗现在会给出三类高信号结果：
+
+- `alerts`：这一轮发现任务失声 / stale 了
+- `recoveries`：这一轮自动续跑把任务往前推了
+- `needs_attention`：这一轮确认已经不能安全自动恢复，或者重试次数耗尽
+
+这样用户看到的就不再只是“它怎么突然不说话了”，而是能分清：卡住了、恢复了，还是该人工接手了。
 
 ## 没做成 skill，也能用
 

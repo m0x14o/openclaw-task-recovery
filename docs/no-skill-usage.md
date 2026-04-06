@@ -1,6 +1,6 @@
 # No-skill usage
 
-You do **not** need a formal OpenClaw skill before using `openclaw-task-runtime`.
+You do **not** need a formal OpenClaw skill before using `openclaw-task-recovery`.
 
 That is the most common beginner misunderstanding.
 
@@ -30,7 +30,7 @@ If the task repeats, then promote it into a proper skill.
 
 Send this to your own OpenClaw:
 
-> Install and enable https://github.com/m0x14o/openclaw-task-runtime in the current OpenClaw workspace: clone it into `repos/openclaw-task-runtime`, run `python3 install.py`, wire the task recovery check into `HEARTBEAT.md`, and if no skill exists for this task, create a temporary resume adapter under `tmp/task-runtime/<task-slug>/task_resume.py`, create a run card, checkpoint safe phases, and run this job under the recovery layer so it can resume automatically.
+> Install and enable https://github.com/m0x14o/openclaw-task-recovery in the current OpenClaw workspace: clone it into `repos/openclaw-task-recovery`, run `python3 install.py`, wire the task recovery check into `HEARTBEAT.md`, and if no skill exists for this task, create a temporary resume adapter under `tmp/task-runtime/<task-slug>/task_resume.py`, create a run card, checkpoint safe phases, and run this job under the recovery layer so it can resume automatically.
 
 ## Minimal ad-hoc example
 
@@ -38,7 +38,7 @@ Send this to your own OpenClaw:
 
 ```bash
 mkdir -p ~/.openclaw/workspace/tmp/task-runtime/my-task
-cp ~/.openclaw/workspace/templates/openclaw-task-runtime/task_resume.py \
+cp ~/.openclaw/workspace/templates/openclaw-task-recovery/task_resume.py \
   ~/.openclaw/workspace/tmp/task-runtime/my-task/task_resume.py
 ```
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install openclaw-task-runtime into an existing OpenClaw workspace."""
+"""Install openclaw-task-recovery into an existing OpenClaw workspace."""
 
 from __future__ import annotations
 
@@ -88,7 +88,7 @@ def patch_heartbeat(path: Path, *, workspace: Path) -> bool:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Install openclaw-task-runtime into an OpenClaw workspace")
+    parser = argparse.ArgumentParser(description="Install openclaw-task-recovery into an OpenClaw workspace")
     parser.add_argument("--workspace")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
@@ -98,10 +98,10 @@ def main() -> int:
         REPO_ROOT / "scripts" / "task_runtime.py": workspace / "scripts" / "task_runtime.py",
         REPO_ROOT / "scripts" / "task_runtime_watch.py": workspace / "scripts" / "task_runtime_watch.py",
         REPO_ROOT / "scripts" / "task_runtime_resume.py": workspace / "scripts" / "task_runtime_resume.py",
-        REPO_ROOT / "docs" / "task-runtime-lite.md": workspace / "docs" / "openclaw-task-runtime" / "task-runtime-lite.md",
-        REPO_ROOT / "docs" / "task-runtime-adapters.md": workspace / "docs" / "openclaw-task-runtime" / "task-runtime-adapters.md",
-        REPO_ROOT / "OPENCLAW_ONE_LINER.md": workspace / "docs" / "openclaw-task-runtime" / "OPENCLAW_ONE_LINER.md",
-        REPO_ROOT / "templates" / "task_resume.py": workspace / "templates" / "openclaw-task-runtime" / "task_resume.py",
+        REPO_ROOT / "docs" / "task-runtime-lite.md": workspace / "docs" / "openclaw-task-recovery" / "task-runtime-lite.md",
+        REPO_ROOT / "docs" / "task-runtime-adapters.md": workspace / "docs" / "openclaw-task-recovery" / "task-runtime-adapters.md",
+        REPO_ROOT / "OPENCLAW_ONE_LINER.md": workspace / "docs" / "openclaw-task-recovery" / "OPENCLAW_ONE_LINER.md",
+        REPO_ROOT / "templates" / "task_resume.py": workspace / "templates" / "openclaw-task-recovery" / "task_resume.py",
     }
 
     copied: list[str] = []

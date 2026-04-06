@@ -1,6 +1,6 @@
 # Task Recovery Adapters
 
-This document defines the adapter contract for `openclaw-task-runtime`.
+This document defines the adapter contract for `openclaw-task-recovery`.
 
 The recovery layer stays generic. Each task or skill provides only a thin `task_resume.py` adapter that knows how to safely resume its phases.
 

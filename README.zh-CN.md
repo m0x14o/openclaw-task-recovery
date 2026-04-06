@@ -1,4 +1,4 @@
-# openclaw-task-runtime
+# openclaw-task-recovery
 
 [English README](./README.md) | [快速上手](./QUICKSTART.zh-CN.md) | [复制即用提示词（中文）](./OPENCLAW_ONE_LINER.zh-CN.md) | [Copy-paste prompts (EN)](./OPENCLAW_ONE_LINER.md)
 
@@ -10,11 +10,11 @@
 
 ### 1）一句话安装
 
-> 帮我把 https://github.com/m0x14o/openclaw-task-runtime 装到当前 OpenClaw 工作区里：克隆到 `repos/openclaw-task-runtime`，运行 `python3 install.py`，把恢复检查接到 `HEARTBEAT.md`，然后告诉我已经可以用了。
+> 帮我把 https://github.com/m0x14o/openclaw-task-recovery 装到当前 OpenClaw 工作区里：克隆到 `repos/openclaw-task-recovery`，运行 `python3 install.py`，把恢复检查接到 `HEARTBEAT.md`，然后告诉我已经可以用了。
 
 ### 2）一句话把一个已有 skill 接进来
 
-> 帮我把 `<skill-name>` 接到 `openclaw-task-runtime`：用模板生成 `task_resume.py`，给长任务阶段加 run card 和 checkpoint，只对安全阶段开自动续跑，顺手把最简用法写进这个 skill 的文档，最后直接告诉我以后怎么用。
+> 帮我把 `<skill-name>` 接到 `openclaw-task-recovery`：用模板生成 `task_resume.py`，给长任务阶段加 run card 和 checkpoint，只对安全阶段开自动续跑，顺手把最简用法写进这个 skill 的文档，最后直接告诉我以后怎么用。
 
 ### 3）一句话执行一个临时长任务（哪怕还没做成 skill）
 
@@ -41,7 +41,7 @@ OpenClaw 很能干活，但长任务经常会遇到这些破事：
 - 最贵的前半段都跑完了，结果渲染最后一步炸了
 - 一个任务明明适合分阶段恢复，却只能当成一坨黑箱重来
 
-`openclaw-task-runtime` 的目标，就是给 OpenClaw 补一个小而实用的 durable recovery 层，不引入一整套重型工作流平台。
+`openclaw-task-recovery` 的目标，就是给 OpenClaw 补一个小而实用的 durable recovery 层，不引入一整套重型工作流平台。
 
 ## 它不是什么
 
@@ -67,16 +67,16 @@ OpenClaw 很能干活，但长任务经常会遇到这些破事：
 把仓库 clone 到你的 OpenClaw workspace 里：
 
 ```bash
-git clone https://github.com/m0x14o/openclaw-task-runtime ~/.openclaw/workspace/repos/openclaw-task-runtime
-cd ~/.openclaw/workspace/repos/openclaw-task-runtime
+git clone https://github.com/m0x14o/openclaw-task-recovery ~/.openclaw/workspace/repos/openclaw-task-recovery
+cd ~/.openclaw/workspace/repos/openclaw-task-recovery
 python3 install.py
 ```
 
 安装器会自动：
 
 - 复制 runtime 脚本到 `<workspace>/scripts/`
-- 复制文档到 `<workspace>/docs/openclaw-task-runtime/`
-- 复制 adapter 模板到 `<workspace>/templates/openclaw-task-runtime/`
+- 复制文档到 `<workspace>/docs/openclaw-task-recovery/`
+- 复制 adapter 模板到 `<workspace>/templates/openclaw-task-recovery/`
 - 以幂等方式追加或刷新 `<workspace>/HEARTBEAT.md` 里的 Task Recovery Check
 
 ## 工作方式
@@ -176,7 +176,7 @@ python3 ~/.openclaw/workspace/scripts/task_runtime.py checkpoint <task_id> \
 先拷贝模板：
 
 ```bash
-cp ~/.openclaw/workspace/templates/openclaw-task-runtime/task_resume.py \
+cp ~/.openclaw/workspace/templates/openclaw-task-recovery/task_resume.py \
   ~/.openclaw/workspace/skills/my-skill/scripts/task_resume.py
 ```
 

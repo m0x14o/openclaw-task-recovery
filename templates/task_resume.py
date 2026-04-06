@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Template adapter for openclaw-task-runtime.
+"""Template adapter for openclaw-task-recovery.
 
 Copy this file into your skill, then implement the safe resumable phases.
 Example destination:

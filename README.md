@@ -1,4 +1,4 @@
-# openclaw-task-runtime
+# openclaw-task-recovery
 
 [中文说明](./README.zh-CN.md) | [Quickstart](./QUICKSTART.md) | [One-line prompts](./OPENCLAW_ONE_LINER.md)
 
@@ -10,15 +10,15 @@ If you do not want to read docs, copy **one** of these to your own OpenClaw.
 
 ### 1) One-line install
 
-> Install and enable https://github.com/m0x14o/openclaw-task-runtime in the current OpenClaw workspace: clone it into `repos/openclaw-task-runtime`, run `python3 install.py`, wire the task recovery check into `HEARTBEAT.md`, and confirm it is ready.
+> Install and enable https://github.com/m0x14o/openclaw-task-recovery in the current OpenClaw workspace: clone it into `repos/openclaw-task-recovery`, run `python3 install.py`, wire the task recovery check into `HEARTBEAT.md`, and confirm it is ready.
 
 ### 2) One-line skill integration
 
-> Connect the `<skill-name>` skill to https://github.com/m0x14o/openclaw-task-runtime in the current OpenClaw workspace: create a `task_resume.py` adapter from the installed template, add run cards and checkpoints for long-running phases, enable heartbeat-based auto-resume only for safe phases, update the skill docs with the minimal usage, and then show me exactly how to use it.
+> Connect the `<skill-name>` skill to https://github.com/m0x14o/openclaw-task-recovery in the current OpenClaw workspace: create a `task_resume.py` adapter from the installed template, add run cards and checkpoints for long-running phases, enable heartbeat-based auto-resume only for safe phases, update the skill docs with the minimal usage, and then show me exactly how to use it.
 
 ### 3) One-line temporary long task
 
-> Run this as a resumable long task under openclaw-task-runtime in the current OpenClaw workspace. If no skill exists yet, scaffold a temporary adapter under `tmp/task-runtime/<task-slug>/task_resume.py`, create a run card, checkpoint the safe phases, enable heartbeat auto-resume, and at minimum leave me either a final result, a partial result, or a clear block report: <replace this with your task>
+> Run this as a resumable long task under openclaw-task-recovery in the current OpenClaw workspace. If no skill exists yet, scaffold a temporary adapter under `tmp/task-runtime/<task-slug>/task_resume.py`, create a run card, checkpoint the safe phases, enable heartbeat auto-resume, and at minimum leave me either a final result, a partial result, or a clear block report: <replace this with your task>
 
 You do **not** need to understand run cards, checkpoints, or adapters before trying it.
 
@@ -41,7 +41,7 @@ OpenClaw is great at doing work, but long jobs can still get messy:
 - report rendering fails after the expensive part already finished
 - a task needs resumable phases instead of one giant black box
 
-`openclaw-task-runtime` gives OpenClaw a small durable recovery layer without introducing a heavy workflow platform.
+`openclaw-task-recovery` gives OpenClaw a small durable recovery layer without introducing a heavy workflow platform.
 
 ## What this is not
 
@@ -56,7 +56,7 @@ Think of it as **a small recovery layer for OpenClaw workspaces**, closer to Lan
 
 Send this **single message** to your own OpenClaw:
 
-> Install and enable https://github.com/m0x14o/openclaw-task-runtime in the current OpenClaw workspace: clone it into `repos/openclaw-task-runtime`, run `python3 install.py`, wire the task runtime recovery check into `HEARTBEAT.md`, and if no skill exists for my task, scaffold a temporary resume adapter under `tmp/task-runtime/<task-slug>/task_resume.py`. Then show me the minimal `task card + resume_adapter` pattern for my next long-running task.
+> Install and enable https://github.com/m0x14o/openclaw-task-recovery in the current OpenClaw workspace: clone it into `repos/openclaw-task-recovery`, run `python3 install.py`, wire the task runtime recovery check into `HEARTBEAT.md`, and if no skill exists for my task, scaffold a temporary resume adapter under `tmp/task-runtime/<task-slug>/task_resume.py`. Then show me the minimal `task card + resume_adapter` pattern for my next long-running task.
 
 If your OpenClaw can run shell commands in its own workspace, that is enough.
 
@@ -65,16 +65,16 @@ If your OpenClaw can run shell commands in its own workspace, that is enough.
 Clone this repo into your OpenClaw workspace, typically:
 
 ```bash
-git clone https://github.com/m0x14o/openclaw-task-runtime ~/.openclaw/workspace/repos/openclaw-task-runtime
-cd ~/.openclaw/workspace/repos/openclaw-task-runtime
+git clone https://github.com/m0x14o/openclaw-task-recovery ~/.openclaw/workspace/repos/openclaw-task-recovery
+cd ~/.openclaw/workspace/repos/openclaw-task-recovery
 python3 install.py
 ```
 
 The installer will:
 
 - copy runtime scripts into `<workspace>/scripts/`
-- copy docs into `<workspace>/docs/openclaw-task-runtime/`
-- copy an adapter template into `<workspace>/templates/openclaw-task-runtime/`
+- copy docs into `<workspace>/docs/openclaw-task-recovery/`
+- copy an adapter template into `<workspace>/templates/openclaw-task-recovery/`
 - append or refresh an idempotent Task Recovery Check section in `<workspace>/HEARTBEAT.md`
 
 ## How it works
@@ -174,7 +174,7 @@ python3 ~/.openclaw/workspace/scripts/task_runtime.py checkpoint <task_id> \
 Copy the template:
 
 ```bash
-cp ~/.openclaw/workspace/templates/openclaw-task-runtime/task_resume.py \
+cp ~/.openclaw/workspace/templates/openclaw-task-recovery/task_resume.py \
   ~/.openclaw/workspace/skills/my-skill/scripts/task_resume.py
 ```
 

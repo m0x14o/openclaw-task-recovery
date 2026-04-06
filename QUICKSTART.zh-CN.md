@@ -4,11 +4,11 @@
 
 ## 一句话安装
 
-> 帮我把 https://github.com/m0x14o/openclaw-task-runtime 装到当前 OpenClaw 工作区里：克隆到 `repos/openclaw-task-runtime`，运行 `python3 install.py`，把恢复检查接到 `HEARTBEAT.md`，然后告诉我已经可以用了。
+> 帮我把 https://github.com/m0x14o/openclaw-task-recovery 装到当前 OpenClaw 工作区里：克隆到 `repos/openclaw-task-recovery`，运行 `python3 install.py`，把恢复检查接到 `HEARTBEAT.md`，然后告诉我已经可以用了。
 
 ## 一句话接入已有 skill
 
-> 帮我把 `<skill-name>` 接到 `openclaw-task-runtime`：用模板生成 `task_resume.py`，给长任务阶段加 run card 和 checkpoint，只对安全阶段开自动续跑，顺手把最简用法写进这个 skill 的文档，最后直接告诉我以后怎么用。
+> 帮我把 `<skill-name>` 接到 `openclaw-task-recovery`：用模板生成 `task_resume.py`，给长任务阶段加 run card 和 checkpoint，只对安全阶段开自动续跑，顺手把最简用法写进这个 skill 的文档，最后直接告诉我以后怎么用。
 
 ## 一句话执行临时长任务
 

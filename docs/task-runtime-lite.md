@@ -1,6 +1,6 @@
 # Task Recovery Layer Lite
 
-`openclaw-task-runtime` is a small durable recovery layer for OpenClaw workspaces.
+`openclaw-task-recovery` is a small durable recovery layer for OpenClaw workspaces.
 
 It provides:
 
@@ -19,8 +19,8 @@ After `python3 install.py`, the important pieces land in:
 - `<workspace>/scripts/task_runtime.py`
 - `<workspace>/scripts/task_runtime_watch.py`
 - `<workspace>/scripts/task_runtime_resume.py`
-- `<workspace>/docs/openclaw-task-runtime/`
-- `<workspace>/templates/openclaw-task-runtime/`
+- `<workspace>/docs/openclaw-task-recovery/`
+- `<workspace>/templates/openclaw-task-recovery/`
 
 ## Auto-enable behavior
 
